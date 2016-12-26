@@ -1,16 +1,17 @@
 package container
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
-	"os"
-	"strings"
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/reference"
-	"github.com/docker/docker/cli/command"
 	"github.com/docker/docker/cliconfig"
 	"github.com/docker/docker/cliconfig/configfile"
 	"github.com/docker/docker/cliconfig/credentials"
+	"github.com/docker/engine-api/types"
+	"github.com/docker/engine-api/types/reference"
+	"os"
+	"strings"
 )
 
 /**
@@ -35,7 +36,7 @@ func EncodedEnvAuth(ref string) (string, error) {
 	username := os.Getenv("REPO_USER")
 	password := os.Getenv("REPO_PASS")
 	if username != "" && password != "" {
-		auth := types.AuthConfig {
+		auth := types.AuthConfig{
 			Username: username,
 			Password: password,
 		}
@@ -80,14 +81,14 @@ func ParseServerAddress(ref string) (string, error) {
 	}
 	parts := strings.Split(repository, "/")
 	return parts[0], nil
-	
+
 }
 
 // CredentialsStore returns a new credentials store based
 // on the settings provided in the configuration file.
 func CredentialsStore(configFile configfile.ConfigFile) credentials.Store {
 	if configFile.CredentialsStore != "" {
-		return credentials.NewNativeStore(&configFile, configFile.CredentialsStore)
+		return credentials.NewNativeStore(&configFile)
 	}
 	return credentials.NewFileStore(&configFile)
 }
@@ -96,7 +97,11 @@ func CredentialsStore(configFile configfile.ConfigFile) credentials.Store {
  * Base64 encode an AuthConfig struct for transmission over HTTP
  */
 func EncodeAuth(auth types.AuthConfig) (string, error) {
-	return command.EncodeAuthToBase64(auth)
+	buf, err := json.Marshal(auth)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(buf), nil
 }
 
 /**
