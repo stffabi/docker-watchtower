@@ -3,7 +3,7 @@ package mockclient
 import (
 	"time"
 
-	"github.com/CenturyLinkLabs/watchtower/container"
+	"github.com/stffabi/watchtower/container"
 	"github.com/stretchr/testify/mock"
 )
 

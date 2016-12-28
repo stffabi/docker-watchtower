@@ -2,11 +2,17 @@ machine:
   services:
     - docker
   environment:
-    IMAGE_NAME: centurylink/watchtower
+    IMAGE_NAME: stffabi/watchtower
+    HUB_TAG: $(if [ "$CIRCLE_BRANCH" == "master" ] ; then echo latest; else echo $CIRCLE_BRANCH; fi;)
 
 dependencies:
   override:
     - docker pull centurylink/golang-builder:latest
+
+compile:
+  override:
+    - docker run -v $(pwd):/src centurylink/golang-builder:latest
+    - docker build --rm=false -t $IMAGE_NAME:$HUB_TAG .
 
 test:
   override:
@@ -14,9 +20,8 @@ test:
 
 deployment:
   hub:
-    branch: master
+    branch: /.*/
     commands:
-      - docker run -v $(pwd):/src centurylink/golang-builder:latest
-      - docker build -t $IMAGE_NAME:latest .
+      - echo Pushing $IMAGE_NAME:$HUB_TAG to docker hub.
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push $IMAGE_NAME:latest
+      - docker push $IMAGE_NAME:$HUB_TAG
