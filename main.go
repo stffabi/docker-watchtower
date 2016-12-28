@@ -20,6 +20,7 @@ var (
 	pollInterval time.Duration
 	cleanup      bool
 	noRestart    bool
+	filters      []string
 )
 
 func init() {
@@ -74,6 +75,10 @@ func main() {
 			Usage:  "the version of the docker api",
 			EnvVar: "DOCKER_API_VERSION",
 		},
+		cli.StringSliceFlag{
+			Name:  "ps-filter",
+			Usage: "docker ps filters",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -89,6 +94,7 @@ func before(c *cli.Context) error {
 	pollInterval = time.Duration(c.Int("interval")) * time.Second
 	cleanup = c.GlobalBool("cleanup")
 	noRestart = c.GlobalBool("no-restart")
+	filters = c.GlobalStringSlice("ps-filter")
 
 	// configure environment vars for client
 	err := envConfig(c)
@@ -96,7 +102,7 @@ func before(c *cli.Context) error {
 		return err
 	}
 
-	client = container.NewClient(!c.GlobalBool("no-pull"))
+	client = container.NewClient(!c.GlobalBool("no-pull"), filters)
 
 	handleSignals()
 	return nil
