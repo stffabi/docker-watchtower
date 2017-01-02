@@ -21,6 +21,7 @@ var (
 	cleanup      bool
 	noRestart    bool
 	filters      []string
+	slackUrl     string
 )
 
 func init() {
@@ -79,6 +80,10 @@ func main() {
 			Name:  "ps-filter",
 			Usage: "docker ps filters",
 		},
+		cli.StringFlag{
+			Name:  "slack-hook-url",
+			Usage: "the url for sending slack webhooks to",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -95,6 +100,7 @@ func before(c *cli.Context) error {
 	cleanup = c.GlobalBool("cleanup")
 	noRestart = c.GlobalBool("no-restart")
 	filters = c.GlobalStringSlice("ps-filter")
+	slackUrl = c.GlobalString("slack-hook-url")
 
 	// configure environment vars for client
 	err := envConfig(c)
@@ -103,6 +109,10 @@ func before(c *cli.Context) error {
 	}
 
 	client = container.NewClient(!c.GlobalBool("no-pull"), filters)
+
+	if len(slackUrl) != 0 {
+		actions.Slack(slackUrl, actions.SLACK_MESSAGE_STARTUP, false)
+	}
 
 	handleSignals()
 	return nil
@@ -117,8 +127,14 @@ func start(c *cli.Context) {
 
 	for {
 		wg.Add(1)
-		if err := actions.Update(client, names, cleanup, noRestart); err != nil {
+		updatedContainers, containerUpdateErr := actions.Update(client, names, cleanup, noRestart)
+		if containerUpdateErr != nil {
 			fmt.Println(err)
+		}
+		if len(slackUrl) != 0 && len(updatedContainers) != 0 {
+			if err := actions.Slack(updatedContainers, (containerUpdateErr != nil)); err != nil {
+				fmt.Println(err)
+			}
 		}
 		wg.Done()
 

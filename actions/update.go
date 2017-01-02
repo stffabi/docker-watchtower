@@ -34,12 +34,16 @@ func containerFilter(names []string) container.Filter {
 // used to start those containers have been updated. If a change is detected in
 // any of the images, the associated containers are stopped and restarted with
 // the new image.
-func Update(client container.Client, names []string, cleanup bool, noRestart bool) error {
+func Update(client container.Client, names []string, cleanup bool, noRestart bool) ([]string, error) {
 	log.Info("Checking containers for updated images")
+
+	// helper vars for notification
+	var updatedContainers []string
+	somethingFailed := false
 
 	containers, err := client.ListContainers(containerFilter(names))
 	if err != nil {
-		return err
+		return updatedContainers, err
 	}
 
 	for i, container := range containers {
@@ -48,13 +52,14 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			log.Infof("Unable to update container %s. Proceeding to next.", containers[i].Name())
 			log.Debug(err)
 			stale = false
+			somethingFailed = true
 		}
 		containers[i].Stale = stale
 	}
 
 	containers, err = container.SortByDependencies(containers)
 	if err != nil {
-		return err
+		return updatedContainers, err
 	}
 
 	checkDependencies(containers)
@@ -70,6 +75,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 		if container.Stale {
 			if err := client.StopContainer(container, waitTime); err != nil {
 				log.Error(err)
+				somethingFailed = true
 			}
 		}
 	}
@@ -84,6 +90,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			if container.IsWatchtower() {
 				if err := client.RenameContainer(container, randName()); err != nil {
 					log.Error(err)
+					somethingFailed = true
 					continue
 				}
 			}
@@ -91,16 +98,20 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			if !noRestart {
 				if err := client.StartContainer(container); err != nil {
 					log.Error(err)
+					somethingFailed = true
 				}
 			}
 
 			if cleanup {
 				client.RemoveImage(container)
 			}
+
+			updatedContainers = append(updatedContainers, container.Name())
+
 		}
 	}
 
-	return nil
+	return updatedContainers, nil
 }
 
 func checkDependencies(containers []container.Container) {
