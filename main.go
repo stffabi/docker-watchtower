@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	wg           sync.WaitGroup
-	client       container.Client
-	pollInterval time.Duration
-	cleanup      bool
-	noRestart    bool
-	filters      []string
-	slackUrl     string
+	wg            sync.WaitGroup
+	client        container.Client
+	pollInterval  time.Duration
+	cleanup       bool
+	noRestart     bool
+	filters       []string
+	slackNotifier *actions.SlackNotifier
 )
 
 func init() {
@@ -84,6 +84,11 @@ func main() {
 			Name:  "slack-hook-url",
 			Usage: "the url for sending slack webhooks to",
 		},
+		cli.StringFlag{
+			Name:  "slack-message-identification",
+			Usage: "specify a string which will be used to identify the messages comming from this watchtower instance. Default if omitted is \"watchtower\"",
+			Value: "watchtower",
+		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
@@ -100,7 +105,9 @@ func before(c *cli.Context) error {
 	cleanup = c.GlobalBool("cleanup")
 	noRestart = c.GlobalBool("no-restart")
 	filters = c.GlobalStringSlice("ps-filter")
-	slackUrl = c.GlobalString("slack-hook-url")
+
+	slackUrl := c.GlobalString("slack-hook-url")
+	slackPrefix := c.GlobalString("slack-message-identification")
 
 	// configure environment vars for client
 	err := envConfig(c)
@@ -111,7 +118,8 @@ func before(c *cli.Context) error {
 	client = container.NewClient(!c.GlobalBool("no-pull"), filters)
 
 	if len(slackUrl) != 0 {
-		actions.Slack(slackUrl, actions.SLACK_MESSAGE_STARTUP, false)
+		slackNotifier = actions.NewSlackNotifier(slackUrl, slackPrefix)
+		slackNotifier.NotifyStartup()
 	}
 
 	handleSignals()
@@ -127,14 +135,13 @@ func start(c *cli.Context) {
 
 	for {
 		wg.Add(1)
-		updatedContainers, containerUpdateErr := actions.Update(client, names, cleanup, noRestart)
-		if containerUpdateErr != nil {
+		updatedContainers, errorMessages, err := actions.Update(client, names, cleanup, noRestart)
+		if err != nil {
 			fmt.Println(err)
 		}
-		if len(slackUrl) != 0 && len(updatedContainers) != 0 {
-			if err := actions.Slack(updatedContainers, (containerUpdateErr != nil)); err != nil {
-				fmt.Println(err)
-			}
+		if slackNotifier != nil && (len(updatedContainers) != 0 || len(errorMessages) != 0) {
+			slackNotifier.NotifyContainerUpdate(updatedContainers, errorMessages)
+
 		}
 		wg.Done()
 

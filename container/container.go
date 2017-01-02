@@ -64,6 +64,10 @@ func (c Container) ImageName() string {
 	return imageName
 }
 
+func (c Container) Details() string {
+	return fmt.Sprintf("%s (%s)", c.ImageName(), c.Name())
+}
+
 // Links returns a list containing the names of all the containers to which
 // this container is linked.
 func (c Container) Links() []string {
