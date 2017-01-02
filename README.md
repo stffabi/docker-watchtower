@@ -1,7 +1,7 @@
 # Watchtower
 
-[![Circle CI](https://circleci.com/gh/stffabi/docker-watchtower.svg?style=svg)](https://circleci.com/gh/stffabi/docker-watchtower)&nbsp;
-[![GoDoc](https://godoc.org/github.com/stffabi/docker-watchtower?status.svg)](https://godoc.org/github.com/stffabi/dpcker-watchtower)&nbsp;
+[![Circle CI](https://circleci.com/gh/stffabi/watchtower.svg?style=svg)](https://circleci.com/gh/stffabi/watchtower)&nbsp;
+[![GoDoc](https://godoc.org/github.com/stffabi/watchtower?status.svg)](https://godoc.org/github.com/stffabi/watchtower)&nbsp;
 [![](https://badge.imagelayers.io/stffabi/watchtower:latest.svg)](https://imagelayers.io/?images=stffabi/watchtower:latest 'Get your own badge on imagelayers.io')
 
 Fork of [CenturyLinkLabs/watchtower](https://github.com/CenturyLinkLabs/watchtower) with some third-party extensions. Great thanks for this piece of software goes to [CenturyLinkLabs](https://github.com/CenturyLinkLabs).
