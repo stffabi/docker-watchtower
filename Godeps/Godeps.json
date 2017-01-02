@@ -14,6 +14,11 @@
 			"Rev": "881bee4e20a5d11a6a88a5667c6f292072ac1963"
 		},
 		{
+			"ImportPath": "github.com/bitly/go-simplejson",
+			"Comment": "v0.5.0",
+			"Rev": "aabad6e819789e569bd6aabf444c935aa9ba1e44"
+		},
+		{
 			"ImportPath": "github.com/docker/distribution/digest",
 			"Comment": "v2.6.0-rc.1-55-g2d50093",
 			"Rev": "2d500932f2c7f032d2abc51f2ef940871d541319"
@@ -144,6 +149,11 @@
 			"Rev": "e30f1e79f3cd72542f2026ceec18d3bd67ab859c"
 		},
 		{
+			"ImportPath": "github.com/mozillazg/request",
+			"Comment": "v0.8.0",
+			"Rev": "052232e32456da4751d789b61e89aba4a07a7e25"
+		},
+		{
 			"ImportPath": "github.com/opencontainers/runc/libcontainer/user",
 			"Comment": "v1.0.0-rc2-185-gc6d8a2f",
 			"Rev": "c6d8a2f26fcef2b9f31048c25dac45d9d151a78c"
@@ -159,6 +169,10 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/proxy",
+			"Rev": "45e771701b814666a7eb299e6c7a57d0b1799e91"
+		},
+		{
+			"ImportPath": "golang.org/x/net/publicsuffix",
 			"Rev": "45e771701b814666a7eb299e6c7a57d0b1799e91"
 		},
 		{
