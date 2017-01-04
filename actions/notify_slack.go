@@ -16,12 +16,12 @@ type SlackNotifier struct {
 }
 
 const (
-	SlackMessageStartup = "Watchtower startup"
-	SlackMessageError   = "Some errors while checking and redeployment (Please check logs):"
-	SlackMessageSuccess = "Successfully redeployed images:"
+	slackMessageStartup = "Watchtower startup"
+	slackMessageError   = "Some errors while checking and redeployment (Please check logs):"
+	slackMessageSuccess = "Successfully redeployed images:"
 )
 
-// Instantiate a new SlackNotifier with an URL and an identifier which will
+// NewSlackNotifier instantiates a new SlackNotifier with an URL and an identifier which will
 // be prepended to each message it sends
 func NewSlackNotifier(slackURL, identity string) *SlackNotifier {
 	identity = strings.Trim(identity, " ")
@@ -47,10 +47,10 @@ func (s SlackNotifier) sendNotification(json map[string]interface{}) {
 	}
 }
 
-// Send a startup message to slack
+// NotifyStartup sends a startup message to slack
 func (s SlackNotifier) NotifyStartup() {
 	s.sendNotification(map[string]interface{}{
-		"text": fmt.Sprintf("%s%s", s.identity, SlackMessageStartup),
+		"text": fmt.Sprintf("%s%s", s.identity, slackMessageStartup),
 	})
 }
 
@@ -70,17 +70,17 @@ func buildAttachment(items []string, title, color string) map[string]interface{}
 	}
 }
 
-// Send a Message after updating containers which yielded either success or errors or both
+// NotifyContainerUpdate sends a Message after updating containers which yielded either success or errors or both
 func (s SlackNotifier) NotifyContainerUpdate(successfulContainers, errorMessages []string) {
 
 	var attachments []map[string]interface{}
 
 	if len(successfulContainers) != 0 {
-		attachments = append(attachments, buildAttachment(successfulContainers, SlackMessageSuccess, "good"))
+		attachments = append(attachments, buildAttachment(successfulContainers, slackMessageSuccess, "good"))
 	}
 
 	if len(errorMessages) != 0 {
-		attachments = append(attachments, buildAttachment(errorMessages, SlackMessageError, "danger"))
+		attachments = append(attachments, buildAttachment(errorMessages, slackMessageError, "danger"))
 	}
 
 	// add a pretext to the first attachment
