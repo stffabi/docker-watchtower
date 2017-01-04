@@ -3,12 +3,14 @@ package container
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/network"
-	dockerclient "github.com/docker/docker/client"
+	dockerclient "github.com/docker/engine-api/client"
+	"github.com/docker/engine-api/types"
+	"github.com/docker/engine-api/types/filters"
+	"github.com/docker/engine-api/types/network"
 	"golang.org/x/net/context"
 )
 
@@ -37,19 +39,20 @@ type Client interface {
 //  * DOCKER_HOST			the docker-engine host to send api requests to
 //  * DOCKER_TLS_VERIFY		whether to verify tls certificates
 //  * DOCKER_API_VERSION	the minimum docker api version to work with
-func NewClient(pullImages bool) Client {
+func NewClient(pullImages bool, filtersSlice []string) Client {
 	cli, err := dockerclient.NewEnvClient()
 
 	if err != nil {
 		log.Fatalf("Error instantiating Docker client: %s", err)
 	}
 
-	return dockerClient{api: cli, pullImages: pullImages}
+	return dockerClient{api: cli, pullImages: pullImages, rawFilters: filtersSlice}
 }
 
 type dockerClient struct {
 	api        *dockerclient.Client
 	pullImages bool
+	rawFilters []string
 }
 
 func (client dockerClient) ListContainers(fn Filter) ([]Container, error) {
@@ -58,9 +61,25 @@ func (client dockerClient) ListContainers(fn Filter) ([]Container, error) {
 
 	log.Debug("Retrieving running containers")
 
+	listOptions := types.ContainerListOptions{}
+
+	if len(client.rawFilters) != 0 {
+		// try to construct filters from the string slice
+		filters := filters.NewArgs()
+		for _, filter := range client.rawFilters {
+			// split by first equals sign
+			filterParts := strings.SplitN(filter, "=", 2)
+			// now add the filter
+			filters.Add(filterParts[0], filterParts[1])
+		}
+		listOptions.All = true
+		listOptions.Filter = filters
+	}
+
 	runningContainers, err := client.api.ContainerList(
 		bg,
-		types.ContainerListOptions{})
+		listOptions,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +90,7 @@ func (client dockerClient) ListContainers(fn Filter) ([]Container, error) {
 			return nil, err
 		}
 
-		imageInfo, _, err := client.api.ImageInspectWithRaw(bg, containerInfo.Image)
+		imageInfo, _, err := client.api.ImageInspectWithRaw(bg, containerInfo.Image, false)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +114,7 @@ func (client dockerClient) StopContainer(c Container, timeout time.Duration) err
 	log.Infof("Stopping %s (%s) with %s", c.Name(), c.ID(), signal)
 
 	if err := client.api.ContainerKill(bg, c.ID(), signal); err != nil {
-		return err
+		fmt.Errorf("Container %s (%s) could not be killed", c.Name(), c.ID())
 	}
 
 	// Wait for container to exit, but proceed anyway after the timeout elapses
@@ -202,7 +221,7 @@ func (client dockerClient) IsContainerStale(c Container) (bool, error) {
 		_, err = ioutil.ReadAll(response)
 	}
 
-	newImageInfo, _, err := client.api.ImageInspectWithRaw(bg, imageName)
+	newImageInfo, _, err := client.api.ImageInspectWithRaw(bg, imageName, false)
 	if err != nil {
 		return false, err
 	}
