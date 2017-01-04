@@ -21,6 +21,8 @@ const (
 	SlackMessageSuccess = "Successfully redeployed images:"
 )
 
+// Instantiate a new SlackNotifier with an URL and an identifier which will
+// be prepended to each message it sends
 func NewSlackNotifier(slackURL, identity string) *SlackNotifier {
 	identity = strings.Trim(identity, " ")
 
@@ -45,6 +47,7 @@ func (s SlackNotifier) sendNotification(json map[string]interface{}) {
 	}
 }
 
+// Send a startup message to slack
 func (s SlackNotifier) NotifyStartup() {
 	s.sendNotification(map[string]interface{}{
 		"text": fmt.Sprintf("%s%s", s.identity, SlackMessageStartup),
@@ -67,6 +70,7 @@ func buildAttachment(items []string, title, color string) map[string]interface{}
 	}
 }
 
+// Send a Message after updating containers which yielded either success or errors or both
 func (s SlackNotifier) NotifyContainerUpdate(successfulContainers, errorMessages []string) {
 
 	var attachments []map[string]interface{}
