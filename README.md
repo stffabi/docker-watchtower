@@ -8,10 +8,6 @@ Fork of [CenturyLinkLabs/watchtower](https://github.com/CenturyLinkLabs/watchtow
 
 A process for watching your Docker containers and automatically restarting them whenever their base image is refreshed.
 
-## Changes in this fork
-
-This repository builts upon the fork of  [stffabi](https://github.com/stffabi/docker-watchtower) to implement a new flag which allows to specify filters just like `docker ps --filter`. Just add (multiple) `--ps-filter label=value` flags. It also allows to reload stoped one-shot containers.
-
 ## Overview
 
 Watchtower is an application that will monitor your running Docker containers and watch for changes to the images that those containers were originally started from. If watchtower detects that an image has changed, it will automatically restart the container using the new image.
