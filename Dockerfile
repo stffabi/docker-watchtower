@@ -1,5 +1,5 @@
 FROM centurylink/ca-certs
-MAINTAINER CenturyLink Labs <innovationslab@ctl.io>
+MAINTAINER Fabrizio Steiner <stffabi@users.noreply.github.com>
 LABEL "com.centurylinklabs.watchtower"="true"
 
 COPY watchtower /
