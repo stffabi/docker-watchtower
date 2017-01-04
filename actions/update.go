@@ -55,7 +55,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			log.Infof("Unable to update container %s. Proceeding to next.", containers[i].Name())
 			log.Debug(err)
 			stale = false
-			errorMessages = append(errorMessages, fmt.Sprintf("Unable to update container %s", container.Name()))
+			errorMessages = append(errorMessages, fmt.Sprintf("Unable to update container %s: %v", container.Details(), err))
 		}
 		containers[i].Stale = stale
 	}
@@ -78,7 +78,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 		if container.Stale {
 			if err := client.StopContainer(container, waitTime); err != nil {
 				log.Error(err)
-				errorMessages = append(errorMessages, fmt.Sprintf("Unable to stop container %s", container.Details()))
+				errorMessages = append(errorMessages, fmt.Sprintf("Unable to stop container %s: %v", container.Details(), err))
 			}
 		}
 	}
@@ -93,7 +93,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			if container.IsWatchtower() {
 				if err := client.RenameContainer(container, randName()); err != nil {
 					log.Error(err)
-					errorMessages = append(errorMessages, fmt.Sprintf("Unable to rename container %s", container.Details()))
+					errorMessages = append(errorMessages, fmt.Sprintf("Unable to rename container %s: %v", container.Details(), err))
 					continue
 				}
 			}
@@ -101,7 +101,7 @@ func Update(client container.Client, names []string, cleanup bool, noRestart boo
 			if !noRestart {
 				if err := client.StartContainer(container); err != nil {
 					log.Error(err)
-					errorMessages = append(errorMessages, fmt.Sprintf("Unable to restart container %s", container.Details()))
+					errorMessages = append(errorMessages, fmt.Sprintf("Unable to restart container %s: %v", container.Details(), err))
 				}
 			}
 
