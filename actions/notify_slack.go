@@ -8,18 +8,20 @@ import (
 	"github.com/mozillazg/request"
 )
 
+// SlackNotifier is used to make the https requests to a specified slack
+// webhook URL
 type SlackNotifier struct {
-	slackUrl string
+	slackURL string
 	identity string
 }
 
 const (
-	SLACK_MESSAGE_STARTUP = "Watchtower startup"
-	SLACK_MESSAGE_ERROR   = "Some errors while checking and redeployment (Please check logs):"
-	SLACK_MESSAGE_SUCCESS = "Successfully redeployed images:"
+	SlackMessageStartup = "Watchtower startup"
+	SlackMessageError   = "Some errors while checking and redeployment (Please check logs):"
+	SlackMessageSuccess = "Successfully redeployed images:"
 )
 
-func NewSlackNotifier(slackUrl, identity string) *SlackNotifier {
+func NewSlackNotifier(slackURL, identity string) *SlackNotifier {
 	identity = strings.Trim(identity, " ")
 
 	if len(identity) != 0 {
@@ -27,7 +29,7 @@ func NewSlackNotifier(slackUrl, identity string) *SlackNotifier {
 	}
 
 	return &SlackNotifier{
-		slackUrl: slackUrl,
+		slackURL: slackURL,
 		identity: identity,
 	}
 }
@@ -36,7 +38,7 @@ func (s SlackNotifier) sendNotification(json map[string]interface{}) {
 	c := new(http.Client)
 	req := request.NewRequest(c)
 	req.Json = json
-	_, err := req.Post(s.slackUrl)
+	_, err := req.Post(s.slackURL)
 
 	if err != nil {
 		fmt.Println(err)
@@ -45,7 +47,7 @@ func (s SlackNotifier) sendNotification(json map[string]interface{}) {
 
 func (s SlackNotifier) NotifyStartup() {
 	s.sendNotification(map[string]interface{}{
-		"text": fmt.Sprintf("%s%s", s.identity, SLACK_MESSAGE_STARTUP),
+		"text": fmt.Sprintf("%s%s", s.identity, SlackMessageStartup),
 	})
 }
 
@@ -70,11 +72,11 @@ func (s SlackNotifier) NotifyContainerUpdate(successfulContainers, errorMessages
 	var attachments []map[string]interface{}
 
 	if len(successfulContainers) != 0 {
-		attachments = append(attachments, buildAttachment(successfulContainers, SLACK_MESSAGE_SUCCESS, "good"))
+		attachments = append(attachments, buildAttachment(successfulContainers, SlackMessageSuccess, "good"))
 	}
 
 	if len(errorMessages) != 0 {
-		attachments = append(attachments, buildAttachment(errorMessages, SLACK_MESSAGE_ERROR, "danger"))
+		attachments = append(attachments, buildAttachment(errorMessages, SlackMessageError, "danger"))
 	}
 
 	// add a pretext to the first attachment

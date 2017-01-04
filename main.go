@@ -106,7 +106,7 @@ func before(c *cli.Context) error {
 	noRestart = c.GlobalBool("no-restart")
 	filters = c.GlobalStringSlice("ps-filter")
 
-	slackUrl := c.GlobalString("slack-hook-url")
+	slackURL := c.GlobalString("slack-hook-url")
 	slackPrefix := c.GlobalString("slack-message-identification")
 
 	// configure environment vars for client
@@ -117,8 +117,8 @@ func before(c *cli.Context) error {
 
 	client = container.NewClient(!c.GlobalBool("no-pull"), filters)
 
-	if len(slackUrl) != 0 {
-		slackNotifier = actions.NewSlackNotifier(slackUrl, slackPrefix)
+	if len(slackURL) != 0 {
+		slackNotifier = actions.NewSlackNotifier(slackURL, slackPrefix)
 		slackNotifier.NotifyStartup()
 	}
 

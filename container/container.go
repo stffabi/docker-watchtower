@@ -64,6 +64,8 @@ func (c Container) ImageName() string {
 	return imageName
 }
 
+// Details returns the name of the Docker image as defined in ImageName
+// together with the name of the container
 func (c Container) Details() string {
 	return fmt.Sprintf("%s (%s)", c.ImageName(), c.Name())
 }
