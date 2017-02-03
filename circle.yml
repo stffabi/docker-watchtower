@@ -25,6 +25,6 @@ deployment:
       - cp -r ./dist/* $CIRCLE_ARTIFACTS
   release:
     tag: /v[0-9]+(\.[0-9]+)*/
-    owner: v2tec
+    owner: stffabi
     commands:
       - cp -r ./dist/* $CIRCLE_ARTIFACTS
